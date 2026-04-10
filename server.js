@@ -9,6 +9,7 @@ const { estimate } = require("./taxEstimator");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const LEADS_FILE = path.join(__dirname, "leads.json");
+const APP_BASE_URL = process.env.APP_BASE_URL || "https://tax-estimator-app.onrender.com";
 
 // =============================================================================
 // EMAIL CONFIG
@@ -116,6 +117,7 @@ function buildLeadEmailMessages(lead) {
   const email = lead.contact?.email || "";
   const phone = lead.contact?.phone || "Not provided";
   const bookingLink = "https://calendly.com/ngmsllc/tax-estimate-review-15-minutes";
+  const estimateSummaryLink = `${APP_BASE_URL}/estimate/${lead.leadId}`;
 
   const estimateDisplay = buildEstimateDisplay(lead.estimateSummary);
   const federal = lead.estimateSummary?.federal || {};
@@ -143,16 +145,11 @@ Summary:
 - ${estimateDisplay.federalLine}
 - ${estimateDisplay.stateLine}
 
-This estimate is a starting point. A professional review helps ensure nothing is missed.
-
-This is an estimate only, based on the information entered and not a completed or reviewed tax return. Final numbers may change after review of your tax documents, filing status, credits, deductions, and state-specific rules.
+View your estimate summary:
+${estimateSummaryLink}
 
 👉 Schedule your 15-minute tax review now:
 ${bookingLink}
-
-Availability is limited and fills quickly.
-
-If you prefer, you can also reply to this email and we will follow up with you.
 
 Thank you,
 Greatest Business Solution LLC`;
@@ -166,27 +163,22 @@ Greatest Business Solution LLC`;
 
 Thank you for using the tax estimator.
 
-Based on your estimate, a professional check may help confirm your numbers and identify additional deductions, credits, or planning opportunities.
-
 Summary:
 - ${estimateDisplay.totalLine}
 - ${estimateDisplay.federalLine}
 - ${estimateDisplay.stateLine}
 
-This estimate is a starting point. A professional review helps ensure nothing is missed.
+View your estimate summary:
+${estimateSummaryLink}
 
-This is an estimate only, based on the information entered and not a completed or reviewed tax return. Final numbers may change after review of your tax documents, filing status, credits, deductions, and state-specific rules.
-
-👉 Schedule your 15-minute tax review now:
+👉 Schedule your 15-minute tax review:
 ${bookingLink}
-
-If you prefer, you can also reply to this email.
 
 Thank you,
 Greatest Business Solution LLC`;
   } else {
     internalHeadline = "LOW PRIORITY LEAD";
-    internalAction = "Recommended action: Optional follow-up or nurture sequence.";
+    internalAction = "Optional follow-up.";
 
     clientSubject = "Your tax estimate has been received";
     clientBody =
@@ -194,19 +186,13 @@ Greatest Business Solution LLC`;
 
 Thank you for using the tax estimator.
 
-Your estimate appears relatively straightforward based on the information submitted. If you would like added confidence before filing, a professional review is still available.
-
 Summary:
 - ${estimateDisplay.totalLine}
 - ${estimateDisplay.federalLine}
 - ${estimateDisplay.stateLine}
 
-This estimate is a starting point. A professional review helps ensure nothing is missed.
-
-This is an estimate only, based on the information entered and not a completed or reviewed tax return. Final numbers may change after review of your tax documents, filing status, credits, deductions, and state-specific rules.
-
-Optional follow-up can be scheduled here:
-${bookingLink}
+View your estimate summary:
+${estimateSummaryLink}
 
 Thank you,
 Greatest Business Solution LLC`;
@@ -219,30 +205,19 @@ Greatest Business Solution LLC`;
 Lead ID: ${lead.leadId}
 Submitted: ${lead.timestamp}
 
-Contact Information
+Contact
 - Name: ${name}
 - Email: ${email}
 - Phone: ${phone}
 
-Priority
-- ${priority.toUpperCase()}
-
-Estimate Summary
+Summary
 - ${estimateDisplay.totalLine}
 - ${estimateDisplay.federalLine}
 - ${estimateDisplay.stateLine}
 
-Federal Detail
-- ${labelAmount(federal.net || 0, "Federal")}
-- Federal withheld: $${formatWholeDollar(federal.federalWithheld || 0)}
-- Estimated tax payments: $${formatWholeDollar(federal.estimatedTaxPayments || 0)}
+Link: ${estimateSummaryLink}
 
-State Detail
-- ${labelAmount(state.net || 0, "State")}
-- State withheld: $${formatWholeDollar(state.stateWithheld || 0)}
-
-${internalAction}
-`;
+${internalAction}`;
 
   return {
     internalSubject,

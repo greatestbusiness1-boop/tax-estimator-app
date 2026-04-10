@@ -10,6 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const LEADS_FILE = path.join(__dirname, "leads.json");
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://tax-estimator-app.onrender.com";
+const recentLeads = new Map();
 
 // =============================================================================
 // EMAIL CONFIG
@@ -350,6 +351,7 @@ if (lead.estimateSummary) {
 
   try {
     appendLead(lead);
+recentLeads.set(lead.leadId, lead);
 
     const emailMessages = buildLeadEmailMessages(lead);
 
@@ -388,8 +390,14 @@ if (lead.estimateSummary) {
 // =============================================================================
 
 app.get("/api/estimate-summary/:leadId", (req, res) => {
-  const leads = readLeads();
-  const lead = leads.find(l => String(l.leadId) === String(req.params.leadId));
+  const leadId = String(req.params.leadId);
+
+  let lead = recentLeads.get(leadId);
+
+  if (!lead) {
+    const leads = readLeads();
+    lead = leads.find(l => String(l.leadId) === leadId);
+  }
 
   if (!lead) {
     return res.status(404).json({

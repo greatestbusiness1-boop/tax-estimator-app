@@ -389,7 +389,7 @@ if (lead.estimateSummary) {
 
 app.get("/api/estimate-summary/:leadId", (req, res) => {
   const leads = readLeads();
-  const lead = leads.find(l => l.leadId === req.params.leadId);
+  const lead = leads.find(l => String(l.leadId) === String(req.params.leadId));
 
   if (!lead) {
     return res.status(404).json({
